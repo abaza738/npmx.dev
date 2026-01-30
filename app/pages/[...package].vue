@@ -494,7 +494,7 @@ function handleClick(event: MouseEvent) {
 </script>
 
 <template>
-  <main class="container py-8 xl:py-12">
+  <main class="container flex-1 py-8 xl:py-12">
     <PackageSkeleton v-if="status === 'pending'" />
 
     <article
