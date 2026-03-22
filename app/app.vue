@@ -47,10 +47,19 @@ if (import.meta.server) {
   setJsonLd(createWebSiteSchema())
 }
 
+const keyboardShortcuts = useKeyboardShortcuts()
+const { settings } = useSettings()
+
 onKeyDown(
   '/',
   e => {
-    if (isEditableElement(e.target)) return
+    if (e.ctrlKey) {
+      e.preventDefault()
+      settings.value.instantSearch = !settings.value.instantSearch
+      return
+    }
+
+    if (!keyboardShortcuts.value || isEditableElement(e.target)) return
     e.preventDefault()
 
     const searchInput = document.querySelector<HTMLInputElement>(
@@ -70,7 +79,7 @@ onKeyDown(
 onKeyDown(
   '?',
   e => {
-    if (isEditableElement(e.target)) return
+    if (!keyboardShortcuts.value || isEditableElement(e.target)) return
     e.preventDefault()
     showKbdHints.value = true
   },
@@ -80,7 +89,7 @@ onKeyDown(
 onKeyUp(
   '?',
   e => {
-    if (isEditableElement(e.target)) return
+    if (!keyboardShortcuts.value || isEditableElement(e.target)) return
     e.preventDefault()
     showKbdHints.value = false
   },
@@ -126,6 +135,10 @@ if (import.meta.client) {
     }}</LinkBase>
 
     <AppHeader :show-logo="!isHomepage" />
+
+    <NuxtRouteAnnouncer v-slot="{ message }">
+      {{ route.name === 'search' ? `${$t('search.title_packages')} - npmx` : message }}
+    </NuxtRouteAnnouncer>
 
     <div id="main-content" class="flex-1 flex flex-col" tabindex="-1">
       <NuxtPage />

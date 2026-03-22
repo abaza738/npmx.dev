@@ -15,16 +15,20 @@
 const pages = [
   '/oauth-client-metadata.json',
   '/200.html',
+  '/opensearch.xml',
   '/about',
   '/accessibility',
+  '/blog',
   '/compare',
   '/org',
   '/package',
   '/package-code',
   '/package-docs',
+  '/pds',
   '/privacy',
   '/search',
   '/settings',
+  '/translation-status',
   '/recharging',
 ]
 

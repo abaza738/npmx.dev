@@ -140,29 +140,6 @@ function getMockForUrl(url: string): MockResult | null {
     }
   }
 
-  // npms.io API - return mock package score data
-  if (host === 'api.npms.io') {
-    const packageMatch = decodeURIComponent(pathname).match(/^\/v2\/package\/(.+)$/)
-    if (packageMatch?.[1]) {
-      return {
-        data: {
-          analyzedAt: new Date().toISOString(),
-          collected: {
-            metadata: { name: packageMatch[1] },
-          },
-          score: {
-            final: 0.75,
-            detail: {
-              quality: 0.8,
-              popularity: 0.7,
-              maintenance: 0.75,
-            },
-          },
-        },
-      }
-    }
-  }
-
   // jsdelivr CDN - return 404 for README files, etc.
   if (host === 'cdn.jsdelivr.net') {
     // Return null data which will cause a 404 - README files are optional
@@ -192,6 +169,44 @@ function getMockForUrl(url: string): MockResult | null {
 
   // Gravatar API - return 404 (avatars not needed in tests)
   if (host === 'www.gravatar.com') {
+    return { data: null }
+  }
+
+  // npm attestations API - return empty attestations (provenance not needed in tests)
+  if (host === 'registry.npmjs.org' && pathname.startsWith('/-/npm/v1/attestations/')) {
+    return { data: { attestations: [] } }
+  }
+
+  // Constellation API - return empty results for link queries
+  if (host === 'constellation.microcosm.blue') {
+    if (pathname === '/links/distinct-dids') {
+      return { data: { total: 0, linking_dids: [], cursor: undefined } }
+    }
+    if (pathname === '/links/all') {
+      return { data: { links: {} } }
+    }
+    if (pathname === '/xrpc/blue.microcosm.links.getBacklinks') {
+      return { data: { total: 0, records: [], cursor: undefined } }
+    }
+    return { data: null }
+  }
+
+  // UNGH (GitHub proxy) - return mock repo metadata
+  if (host === 'ungh.cc') {
+    const repoMatch = pathname.match(/^\/repos\/([^/]+)\/([^/]+)$/)
+    if (repoMatch?.[1] && repoMatch?.[2]) {
+      return {
+        data: {
+          repo: {
+            description: `${repoMatch[1]}/${repoMatch[2]} - mock repo description`,
+            stars: 1000,
+            forks: 100,
+            watchers: 50,
+            defaultBranch: 'main',
+          },
+        },
+      }
+    }
     return { data: null }
   }
 
@@ -424,6 +439,19 @@ async function handleGitHubApi(
     }
     // Return empty array if no fixture exists
     return { data: [] }
+  }
+
+  // Commits endpoint: /repos/{owner}/{repo}/commits
+  const commitsMatch = pathname.match(/^\/repos\/([^/]+)\/([^/]+)\/commits$/)
+  if (commitsMatch) {
+    // Return a single-item array; fetchPageCount will use body.length when no Link header
+    return { data: [{ sha: 'mock-commit' }] }
+  }
+
+  // Search endpoint: /search/issues, /search/commits, etc.
+  const searchMatch = pathname.match(/^\/search\/(.+)$/)
+  if (searchMatch) {
+    return { data: { total_count: 0, incomplete_results: false, items: [] } }
   }
 
   // Other GitHub API endpoints can be added here as needed
@@ -815,7 +843,10 @@ export default defineNitroPlugin(nitroApp => {
           headers: { 'content-type': 'application/json' },
         })
       }
-      return new Response('Not Found', { status: 404 })
+      return new Response(JSON.stringify({ error: 'Not Found' }), {
+        status: 404,
+        headers: { 'content-type': 'application/json' },
+      })
     } catch (err: any) {
       // Convert createError exceptions to proper HTTP responses
       const statusCode = err?.statusCode || err?.status || 404

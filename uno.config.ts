@@ -1,6 +1,7 @@
 import {
   defineConfig,
   presetIcons,
+  presetTypography,
   presetWind4,
   transformerDirectives,
   transformerVariantGroup,
@@ -34,6 +35,7 @@ export default defineConfig({
         custom: customIcons,
       },
     }),
+    presetTypography(),
     // keep this preset last
     ...(process.env.CI ? [] : [presetRtl(), presetA11y()]),
   ].filter(Boolean),
@@ -100,6 +102,12 @@ export default defineConfig({
         nuxt: '#00DC82',
         vite: '#646CFF',
         jsfiddle: '#0084FF',
+        typescript: '#3178C6',
+        solid: '#2C4F7C',
+        svelte: '#FF3E00',
+        tailwind: '#06B6D4',
+        storybook: '#FF4785',
+        marko: '#CC0067',
       },
     },
     animation: {
@@ -148,6 +156,7 @@ export default defineConfig({
     ['badge-purple', 'bg-badge-purple/10 text-badge-purple'],
     ['badge-pink', 'bg-badge-pink/10 text-badge-pink'],
     ['badge-subtle', 'bg-bg-subtle text-fg-subtle'],
+    ['badge-accent', 'bg-accent/10 text-accent'],
   ],
   rules: [
     // Custom scale for active states
