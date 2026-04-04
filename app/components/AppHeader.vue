@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { LinkBase } from '#components'
 import type { NavigationConfig, NavigationConfigWithGroups } from '~/types'
-import { isEditableElement } from '~/utils/input'
 import { NPMX_DOCS_SITE } from '#shared/utils/constants'
 
-const keyboardShortcuts = useKeyboardShortcuts()
 const discord = useDiscordLink()
 
 withDefaults(
@@ -91,6 +89,14 @@ const mobileLinks = computed<NavigationConfigWithGroups>(() => [
         type: 'link',
         external: false,
         iconClass: 'i-lucide:languages',
+      },
+      {
+        name: 'Brand',
+        label: $t('footer.brand'),
+        to: { name: 'brand' },
+        type: 'link',
+        external: false,
+        iconClass: 'i-lucide:palette',
       },
     ],
   },
@@ -192,22 +198,10 @@ function handleSearchFocus() {
   showFullSearch.value = true
 }
 
-onKeyStroke(
-  e => {
-    if (!keyboardShortcuts.value || isEditableElement(e.target)) {
-      return
-    }
-
-    for (const link of desktopLinks.value) {
-      if (link.to && link.keyshortcut && isKeyWithoutModifiers(e, link.keyshortcut)) {
-        e.preventDefault()
-        navigateTo(link.to)
-        break
-      }
-    }
-  },
-  { dedupe: true },
-)
+useShortcuts({
+  'c': () => ({ name: 'compare' }),
+  ',': () => ({ name: 'settings' }),
+})
 </script>
 
 <template>
@@ -218,17 +212,18 @@ onKeyStroke(
       class="relative container min-h-14 flex items-center gap-2 z-1 justify-end"
     >
       <!-- Mobile: Logo (navigates home) -->
-      <NuxtLink
-        v-if="!isSearchExpanded && !isOnHomePage"
-        to="/"
-        :aria-label="$t('header.home')"
-        class="sm:hidden flex-shrink-0 font-mono text-lg font-medium text-fg hover:text-fg transition-colors duration-200 focus-ring me-4"
-      >
-        <AppMark class="w-6 h-auto" />
-      </NuxtLink>
+      <LogoContextMenu v-if="!isSearchExpanded && !isOnHomePage" class="sm:hidden flex-shrink-0">
+        <NuxtLink
+          to="/"
+          :aria-label="$t('header.home')"
+          class="font-mono text-lg font-medium text-fg hover:text-fg transition-colors duration-200 focus-ring me-4"
+        >
+          <AppMark class="w-6 h-auto" />
+        </NuxtLink>
+      </LogoContextMenu>
 
       <!-- Desktop: Logo (navigates home) -->
-      <div v-if="showLogo" class="hidden sm:flex flex-shrink-0 items-center">
+      <LogoContextMenu v-if="showLogo" class="hidden sm:flex flex-shrink-0 items-center">
         <NuxtLink
           :to="{ name: 'index' }"
           :aria-label="$t('header.home')"
@@ -243,7 +238,7 @@ onKeyStroke(
             {{ env === 'release' ? 'alpha' : env }}
           </span>
         </NuxtLink>
-      </div>
+      </LogoContextMenu>
 
       <NuxtLink
         v-if="showLogo && !isSearchExpanded && prNumber"
